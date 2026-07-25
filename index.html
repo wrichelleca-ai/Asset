@@ -200,14 +200,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup,
          signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey:"AIzaSyAYuCEQ2nUC6uLNSGcCPyS1qIXDUQwFVG4",
-  authDomain:"store-asset-tracker.firebaseapp.com",
-  projectId:"store-asset-tracker",
-  storageBucket:"store-asset-tracker.firebasestorage.app",
-  messagingSenderId:"1074431650560",
-  appId:"1:1074431650560:web:23399d93e3531c761821e5"
-};
+const r = await fetch('./firebase-config.json');
+const firebaseConfig = await r.json();
 const app  = initializeApp(firebaseConfig);
 const db   = getFirestore(app);
 const auth = getAuth(app);
@@ -322,12 +316,11 @@ function attachListeners(){
       } else if(window.DB.ready){
         window.onDBChange(key);
       }
-    }, err=>console.error('Listener error',colName,err));
+    }, err=>);
   });
 }
 
 async function seedCtypes(){
-  // Always upsert icons so broken emoji get fixed automatically on load
   const DEF=[
     {id:'ct-kb',       icon:'[KB]',  name:'Keyboard',              cat:'input'},
     {id:'ct-mon',      icon:'[MON]', name:'Monitor',               cat:'display'},
@@ -393,7 +386,7 @@ window.DBAPI = {
   async removeUser(email){ await del(COL.users,email.toLowerCase().trim()); }
 };
 </script>
-<!-- LOGIN SCREEN -->
+
 <div id="login-screen" style="display:none;position:fixed;inset:0;background:var(--bg3);z-index:1000;display:flex;align-items:center;justify-content:center">
   <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:var(--rl);padding:40px 44px;width:380px;max-width:94vw;text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px">
     <div style="font-size:44px">&#127978;</div>
@@ -407,7 +400,7 @@ window.DBAPI = {
     <div style="font-size:11px;color:var(--tx3)">Access restricted to authorized users only.</div>
   </div>
 </div>
-<!-- ACCESS DENIED SCREEN -->
+
 <div id="denied-screen" style="display:none;position:fixed;inset:0;background:var(--bg3);z-index:1000;align-items:center;justify-content:center">
   <div style="background:var(--bg);border:1px solid var(--bd2);border-radius:var(--rl);padding:40px 44px;width:420px;max-width:94vw;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px">
     <div style="font-size:44px">&#128274;</div>
@@ -417,12 +410,12 @@ window.DBAPI = {
     <button onclick="window.AUTH.signOut()" style="padding:9px 20px;border:1px solid var(--bd2);border-radius:var(--r);background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font)">Sign out and try another account</button>
   </div>
 </div>
-<!-- LOADING SCREEN -->
+
 <div class="loading-screen" id="loading-screen">
   <div class="spinner"></div>
   <div style="font-size:14px;font-weight:600;color:var(--tx2)">Connecting to database&#8230;</div>
 </div>
-<!-- MAIN APP -->
+
 <div class="shell" id="app" style="display:none">
 <div class="topbar">
   <div class="brand">&#127978; Retail Asset Tracker</div>
@@ -514,7 +507,7 @@ window.DBAPI = {
     <div id="stores-list"></div>
   </div></div>
 </div></div></div>
-<!-- STORE WIZARD -->
+
 <div class="mov" id="m-wizard" onclick="ocl(event,'m-wizard')"><div class="modal modal-xxl" style="gap:8px">
   <h3 id="wiz-title">Add store</h3>
   <div class="wizard-steps">
@@ -561,7 +554,6 @@ window.DBAPI = {
   </div>
 </div></div>
 
-<!-- UNIT MODAL -->
 <div class="mov" id="m-unit" onclick="ocl(event,'m-unit')"><div class="modal modal-lg">
   <h3 id="m-unit-h">Add unit</h3>
   <div class="fg2"><div class="fr"><label>Unit ID *</label><input id="u-id" placeholder="e.g. POS-01"></div><div class="fr"><label>Type</label><select id="u-type"><option value="POS">POS terminal</option><option value="SCO">Self-checkout</option><option value="PC">Computer / PC</option><option value="SERVER">Server</option><option value="MOBILE">Mobile device</option><option value="PRINTER">Printer</option><option value="CS">Customer service</option><option value="OTHER">Other</option></select></div></div>
@@ -570,7 +562,6 @@ window.DBAPI = {
   <div class="macts"><button class="btn btn-p" onclick="saveUnit()">Save unit</button><button class="btn" onclick="closeM('m-unit')">Cancel</button></div>
 </div></div>
 
-<!-- COMPONENT MODAL -->
 <div class="mov" id="m-comp" onclick="ocl(event,'m-comp')"><div class="modal modal-xl">
   <h3 id="m-comp-h">Add component</h3>
   <div class="fr"><label>Component type *</label><div class="ctp-grid" id="ctp-grid"></div>
@@ -586,7 +577,6 @@ window.DBAPI = {
   <div class="macts"><button class="btn btn-p" onclick="saveComp()">Save component</button><button class="btn" onclick="closeM('m-comp')">Cancel</button></div>
 </div></div>
 
-<!-- ISSUE MODAL -->
 <div class="mov" id="m-issue" onclick="ocl(event,'m-issue')"><div class="modal">
   <h3>Log issue</h3>
   <div class="fr"><label>Unit *</label><select id="i-unit" onchange="fillCompDrop('i-comp',this.value,null)"></select></div>
@@ -596,7 +586,6 @@ window.DBAPI = {
   <div class="macts"><button class="btn btn-p" onclick="saveIssue()">Log issue</button><button class="btn" onclick="closeM('m-issue')">Cancel</button></div>
 </div></div>
 
-<!-- MAINTENANCE MODAL -->
 <div class="mov" id="m-maint" onclick="ocl(event,'m-maint')"><div class="modal modal-lg">
   <h3>Log maintenance / replacement</h3>
   <div class="fg2"><div class="fr"><label>Unit *</label><select id="ml-unit" onchange="fillCompDrop('ml-comp',this.value,null);refreshMaintIssues(this.value)"></select></div><div class="fr"><label>Component (optional)</label><select id="ml-comp"><option value="">&#8212; Whole unit &#8212;</option></select></div></div>
@@ -609,7 +598,6 @@ window.DBAPI = {
   <div class="macts"><button class="btn btn-v" onclick="saveMaint()">Save entry</button><button class="btn" onclick="closeM('m-maint')">Cancel</button></div>
 </div></div>
 
-<!-- ZONE MODAL -->
 <div class="mov" id="m-zone" onclick="ocl(event,'m-zone')"><div class="modal">
   <h3>Name this zone</h3>
   <div class="fr"><label>Zone label</label><input id="z-lbl" placeholder="e.g. Cashier lanes, Manager office"></div>
@@ -619,7 +607,6 @@ window.DBAPI = {
   <div class="macts"><button class="btn btn-p" onclick="saveZone()">Add zone</button><button class="btn" onclick="closeM('m-zone')">Cancel</button></div>
 </div></div>
 
-<!-- COMPONENT TYPES MODAL -->
 <div class="mov" id="m-ctypes" onclick="ocl(event,'m-ctypes')"><div class="modal modal-lg">
   <h3>Manage component types</h3>
   <div id="ctypes-tbl"></div>
@@ -629,7 +616,6 @@ window.DBAPI = {
   <div class="macts"><button class="btn btn-p" onclick="addCtype()">Add type</button><button class="btn" onclick="closeM('m-ctypes')">Close</button></div>
 </div></div>
 
-<!-- USER MANAGEMENT MODAL -->
 <div class="mov" id="m-users" onclick="ocl(event,'m-users')"><div class="modal modal-lg">
   <h3>&#128101; Authorized users</h3>
   <div style="font-size:12px;color:var(--tx2);margin-bottom:8px">Only users listed here can sign in. Add any Google account email.</div>
@@ -640,7 +626,6 @@ window.DBAPI = {
   <div class="fr"><label>Role</label><select id="nu-role"><option value="user">User &#8212; view and log issues/maintenance</option><option value="admin">Admin &#8212; add/edit/delete everything</option><option value="superadmin">Super admin &#8212; manage users and all data</option></select></div>
   <div class="macts"><button class="btn btn-p" onclick="addUserFromModal()">Add user</button><button class="btn" onclick="closeM('m-users')">Close</button></div>
 </div></div><script>
-// ── State ──────────────────────────────────────────────────────────────────
 var curStore = localStorage.getItem('rat_cur') || '';
 var selUnit = null, placeMode = null, pendingZonePos = null;
 var dragData = null, pendingUPos = null, _placeFloor = 0;
@@ -665,38 +650,37 @@ function gc(id)    { var e=document.getElementById(id); return e ? e.checked : f
 
 function ctName(id) { var t=CT().find(function(x){return x.id===id||x._id===id;}); return t ? t.name : id; }
 function ctIcon(id) {
-  // Hardcoded icon lookup - always works regardless of what's stored in Firestore
   var ICONS = {
-    'ct-kb':       '\u2328',       // keyboard
-    'ct-mon':      '\u{1F5A5}',    // desktop computer
-    'ct-pc':       '\u{1F4BB}',    // laptop
-    'ct-scan':     '\u{1F4E1}',    // satellite dish / scanner
-    'ct-scale':    '\u2696',       // scales
-    'ct-pin':      '\u{1F4B3}',    // credit card
-    'ct-cash':     '\u{1F4B0}',    // money bag
-    'ct-print':    '\u{1F5A8}',    // printer
-    'ct-rdisp':    '\u{1F4FA}',    // television
-    'ct-touch':    '\u{1F446}',    // pointing up
-    'ct-cam':      '\u{1F4F7}',    // camera
-    'ct-net':      '\u{1F50C}',    // electric plug
-    'ct-ups':      '\u{1F50B}',    // battery
-    'ct-card':     '\u{1F4B3}',    // credit card
-    'ct-belt':     '\u{1F4E6}',    // package
-    'ct-bag':      '\u{1F6CD}',    // shopping bags
-    'ct-msr':      '\u{1F4B3}',    // credit card
-    'ct-mouse':    '\u{1F5B1}',    // mouse
-    'ct-zebra':    '\u{1F4F1}',    // mobile phone
-    'ct-ipad':     '\u{1F4F2}',    // mobile with arrow
-    'ct-pog':      '\u{1F4CB}',    // clipboard
-    'ct-server':   '\u{1F5A7}',    // networked computers
-    'ct-ap':       '\u{1F4F6}',    // signal bars
-    'ct-esl':      '\u{1F3F7}',    // label
-    'ct-switch':   '\u{1F501}',    // repeat arrows
-    'ct-zprint':   '\u{1F5A8}',    // printer
-    'ct-2ld':      '\u{1F4DF}',    // pager / 2-line display
-    'ct-prek':     '\u2328',       // keyboard
-    'ct-pinpad':   '\u{1F4B3}',    // credit card
-    'ct-2disp':    '\u{1F4FA}',    // television
+    'ct-kb':       '\u2328',
+    'ct-mon':      '\u{1F5A5}',
+    'ct-pc':       '\u{1F4BB}',
+    'ct-scan':     '\u{1F4E1}',
+    'ct-scale':    '\u2696',
+    'ct-pin':      '\u{1F4B3}',
+    'ct-cash':     '\u{1F4B0}',
+    'ct-print':    '\u{1F5A8}',
+    'ct-rdisp':    '\u{1F4FA}',
+    'ct-touch':    '\u{1F446}',
+    'ct-cam':      '\u{1F4F7}',
+    'ct-net':      '\u{1F50C}',
+    'ct-ups':      '\u{1F50B}',
+    'ct-card':     '\u{1F4B3}',
+    'ct-belt':     '\u{1F4E6}',
+    'ct-bag':      '\u{1F6CD}',
+    'ct-msr':      '\u{1F4B3}',
+    'ct-mouse':    '\u{1F5B1}',
+    'ct-zebra':    '\u{1F4F1}',
+    'ct-ipad':     '\u{1F4F2}',
+    'ct-pog':      '\u{1F4CB}',
+    'ct-server':   '\u{1F5A7}',
+    'ct-ap':       '\u{1F4F6}',
+    'ct-esl':      '\u{1F3F7}',
+    'ct-switch':   '\u{1F501}',
+    'ct-zprint':   '\u{1F5A8}',
+    'ct-2ld':      '\u{1F4DF}',
+    'ct-prek':     '\u2328',
+    'ct-pinpad':   '\u{1F4B3}',
+    'ct-2disp':    '\u{1F4FA}',
   };
   if (ICONS[id]) return ICONS[id];
   var t = CT().find(function(x){return x.id===id||x._id===id;});
@@ -721,7 +705,6 @@ function unitWorst(u) {
   return 'ok';
 }
 
-// ── Auth UI functions ───────────────────────────────────────────────────────
 window.showLoginScreen = function() {
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('app').style.display            = 'none';
@@ -736,7 +719,6 @@ window.showAccessDenied = function(email) {
   document.getElementById('denied-screen').style.display  = 'flex';
 };
 
-// ── DB callbacks ────────────────────────────────────────────────────────────
 window.onDBReady = function() {
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('login-screen').style.display   = 'none';
@@ -769,7 +751,6 @@ function renderAll() {
   if (curView==='stores')     renderStores();
 }
 
-// ── Navigation ──────────────────────────────────────────────────────────────
 function goView(v,el) {
   curView = v;
   VIEWS.forEach(function(x){ document.getElementById('view-'+x).style.display = x===v?'':'none'; });
@@ -786,7 +767,6 @@ function openM(id)    { document.getElementById(id).classList.add('open'); }
 function closeM(id)   { document.getElementById(id).classList.remove('open'); }
 function ocl(e,id)    { if (e.target===document.getElementById(id)) closeM(id); }
 
-// ── User topbar ─────────────────────────────────────────────────────────────
 function renderUserTopbar() {
   var u  = window.DB.currentUser;
   var el = document.getElementById('user-topbar');
@@ -807,7 +787,6 @@ function renderUserTopbar() {
   el.innerHTML = out;
 }
 
-// ── User management ─────────────────────────────────────────────────────────
 function openUserMgr() {
   var u = window.DB.currentUser;
   if (!u || (u.role !== 'admin' && u.role !== 'superadmin')) { alert('Admin access required.'); return; }
@@ -873,7 +852,6 @@ async function removeUser(email) {
   renderUserList();
 }
 </script><script>
-// ── Store wizard ────────────────────────────────────────────────────────────
 function openStoreWizard(editId) {
   _wizStoreId = editId || null;
   _wizStoreType = null;
@@ -1024,7 +1002,6 @@ function buildSmallStoreForm() {
   return out;
 }
 </script><script>
-// ── Store wizard save + floor generators ────────────────────────────────────
 async function saveStoreWizard() {
   var num = gv('s-num'), name = gv('s-name');
   if (!num||!name) { alert('Store number and name are required.'); wizGoStep(0); return; }
@@ -1070,7 +1047,6 @@ async function genSuperstore(sid) {
   var depts=['bakery','pharmacy','cosmetics','clothing','liquor','online'];
   var deptNames={bakery:'Bakery',pharmacy:'Pharmacy',cosmetics:'Cosmetics',clothing:'Clothing',liquor:'Liquor',online:'Online ordering'};
 
-  // 2nd floor
   await mkZone(sid,'Store manager office','zc-pur',20,20,200,110,1);
   await mkZone(sid,'Dept manager cubicles','zc-blue',240,20,260,110,1);
   if (hasMeet)  await mkZone(sid,'Meeting room','zc-gray',520,20,160,110,1);
@@ -1080,7 +1056,6 @@ async function genSuperstore(sid) {
   for (var i=0;i<deptPc;i++) await mkUnit(sid,'DEPT-PC-0'+(i+1),'PC','Dept manager cubicles',250+i*38,40,1);
   for (var i=0;i<f2Srv;i++)  await mkUnit(sid,'SRV-2F-0'+(i+1),'SERVER','Remote server room (2F)',870+i*40,40,1);
 
-  // Ground floor
   await mkZone(sid,'Front End POS tills','zc-green',20,20,130,pos*52+20,0);
   for (var i=0;i<pos;i++) await mkUnit(sid,'POS-'+(i<9?'0':'')+(i+1),'POS','Lane '+(i+1),30,30+i*52,0);
 
@@ -1231,7 +1206,6 @@ async function genSmall(sid) {
   }
 }
 </script><script>
-// ── Store display ────────────────────────────────────────────────────────────
 function switchStore(id) {
   curStore = id; localStorage.setItem('rat_cur',id);
   selUnit = null; renderBanner(); renderStats(); renderFloor(); renderDetail();
@@ -1307,7 +1281,6 @@ async function deleteStore(id) {
   if (curStore===id) { curStore = S().filter(function(s){return s._id!==id;})[0]?._id||''; localStorage.setItem('rat_cur',curStore); }
 }
 
-// ── Floor plan rendering ─────────────────────────────────────────────────────
 function renderFloor() {
   var container = document.getElementById('fc-container');
   container.innerHTML = '';
@@ -1411,7 +1384,6 @@ async function endDrag() {
   if (dragData.type==='zone') { var z=Z().find(function(x){return x._id===dragData.id;}); if(z) await window.DBAPI.saveZone(Object.assign({},z,{x:nx,y:ny})); }
   dragData = null; document.onmousemove = null; document.onmouseup = null;
 }
-// ── Zone resize ────────────────────────────────────────────────────────────
 var resizeData = null;
 function startResize(e, zoneId, el, canvas) {
   e.preventDefault(); e.stopPropagation();
@@ -1466,7 +1438,6 @@ async function saveZone() {
   await window.DBAPI.saveZone(data); closeM('m-zone');
 }
 </script><script>
-// ── Detail panel ─────────────────────────────────────────────────────────────
 function renderDetail() {
   var el = document.getElementById('det-panel');
   if (!selUnit) {
@@ -1480,7 +1451,6 @@ function renderDetail() {
 
   var out = '<div class="det-panel">';
 
-  // Header
   out += '<div class="det-hdr">';
   out += '<div><div class="det-title">'+uIcon(u.type)+' '+u.uid;
   out += ' <span style="font-size:12px;font-weight:400;color:var(--tx2)">'+u.type+(u.loc?' &nbsp;&middot;&nbsp; '+u.loc:'')+'</span></div>';
@@ -1494,8 +1464,6 @@ function renderDetail() {
   out += '<button class="btn btn-sm btn-ic btn-d" onclick="deleteUnit(\''+u._id+'\')">&#128465;</button>';
   out += '</div></div>';
 
-  // Status buttons
-  // ── Prominent action buttons ──────────────────────────────────────────
   out += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">';
   out += '<button class="btn btn-p btn-full" style="padding:12px 8px;flex-direction:column;gap:4px" onclick="openUnitModal(\''+u._id+'\')">';
   out += '<span style="font-size:20px">&#9998;</span><span style="font-size:11px">Edit unit</span></button>';
@@ -1514,7 +1482,6 @@ function renderDetail() {
   });
   out += '</div></div>';
 
-  // Components grouped by category
   out += '<div class="sec-lbl" style="margin-bottom:6px">&#128297; Components <span style="font-weight:400;color:var(--tx3)">('+uc.length+')</span></div>';
   if (!uc.length) {
     out += '<div style="font-size:12px;color:var(--tx3);padding:10px 0 14px">No components recorded yet. Click <strong>+ Component</strong> above to add keyboard, monitor, PIN pad, scanner, printer, etc.</div>';
@@ -1553,7 +1520,6 @@ function renderDetail() {
     });
   }
 
-  // Open issues
   out += '<div class="sec-lbl" style="margin-top:14px;margin-bottom:6px">&#9888; Open issues <span style="font-weight:400;color:var(--tx3)">('+oi.length+')</span></div>';
   if (!oi.length) {
     out += '<div style="font-size:12px;color:var(--tx3);padding:4px 0 10px">No open issues.</div>';
@@ -1573,7 +1539,6 @@ function renderDetail() {
     });
   }
 
-  // Maintenance log
   out += '<div class="sec-lbl" style="margin-top:14px;margin-bottom:6px">&#128203; Maintenance log <span style="font-weight:400;color:var(--tx3)">('+uml.length+' entr'+(uml.length!==1?'ies':'y')+')</span>';
   if (uml.length>3) out += '<button class="btn btn-sm" onclick="goView(\'history\',document.getElementById(\'nav-history\'))">View all &#8594;</button>';
   out += '</div>';
@@ -1593,10 +1558,8 @@ function renderDetail() {
   }
   out += '</div>';
   el.innerHTML = out;
-  // panel stays in place - no forced scroll
 }
 </script><script>
-// ── Units CRUD ────────────────────────────────────────────────────────────────
 function openUnitModal(id, type) {
   _euid = id;
   document.getElementById('m-unit-h').textContent = id ? 'Edit unit' : 'Add unit';
@@ -1672,7 +1635,6 @@ function renderUnits() {
   el.innerHTML='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Unit ID</th><th>Type</th><th>Location</th><th>Floor</th><th>Components</th><th>Logs</th><th>Issues</th><th>Status</th><th></th></tr></thead><tbody>'+rows.join('')+'</tbody></table></div>';
 }
 
-// ── Components CRUD ───────────────────────────────────────────────────────────
 function buildCTP() {
   document.getElementById('ctp-grid').innerHTML = CT().map(function(ct) {
     var sel = (_selCTid===ct.id||_selCTid===ct._id);
@@ -1768,7 +1730,6 @@ async function delCtype(id) {
   await window.DBAPI.delCtype(id); renderCtypesList();
 }
 </script><script>
-// ── Issues ────────────────────────────────────────────────────────────────────
 function fillCompDrop(dropId, unitId, selCtid) {
   var uc = unitComps(unitId||'');
   document.getElementById(dropId).innerHTML =
@@ -1827,7 +1788,6 @@ function renderIssues() {
   el.innerHTML='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Unit</th><th>Component</th><th>Severity</th><th>Description</th><th>Reported</th><th>By</th><th>Status</th><th></th></tr></thead><tbody>'+trows.join('')+'</tbody></table></div>';
 }
 
-// ── Maintenance log ───────────────────────────────────────────────────────────
 function refreshMaintIssues(unitId) {
   var u=U().find(function(x){return x._id===unitId;}), oi=u?openIssues(u):[];
   document.getElementById('ml-resolves').innerHTML='<option value="">None</option>'+oi.map(function(iss,i){return'<option value="'+i+'">'+iss.sev.toUpperCase()+' &middot; '+iss.text.slice(0,55)+'</option>';}).join('');
@@ -1893,7 +1853,6 @@ function renderHistory() {
   el.innerHTML='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Unit</th><th>Component</th><th>Type</th><th>Description</th><th>Old SN/Tag</th><th>New SN/Tag</th><th>By</th><th>Ticket</th><th>Cost</th><th></th></tr></thead><tbody>'+trows.join('')+'</tbody></table></div>';
 }
 
-// ── Analytics ─────────────────────────────────────────────────────────────────
 function renderAnalytics() {
   var su=storeUnits(), ml=storeMLogs();
   var reps=ml.filter(function(m){return m.type==='replaced';});
