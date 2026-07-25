@@ -163,6 +163,18 @@ hr{border:none;border-top:1px solid var(--bd);margin:10px 0}
 .tl-title{font-size:12px;font-weight:600}
 .tl-meta{font-size:11px;color:var(--tx3);margin-top:1px}
 .loading-screen{position:fixed;inset:0;background:var(--bg3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:8px}
+.photo-thumb{position:relative;aspect-ratio:1;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd);cursor:pointer;background:var(--bg2)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-thumb:hover .photo-del{display:flex}
+.photo-del{display:none;position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(160,45,45,0.85);color:#fff;align-items:center;justify-content:center;font-size:11px;cursor:pointer;border:none;font-family:var(--font)}
+.photo-cap{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);color:#fff;font-size:9px;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.photo-lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.photo-lightbox.open{display:flex}
+.photo-lightbox img{max-width:92vw;max-height:80vh;border-radius:var(--r);object-fit:contain}
+.photo-lightbox-cap{color:#fff;font-size:13px;opacity:.8}
+.photo-upload-area{border:2px dashed var(--bd2);border-radius:var(--r);padding:16px;text-align:center;cursor:pointer;font-size:12px;color:var(--tx3);transition:all .15s;background:var(--bg2)}
+.photo-upload-area:hover{border-color:var(--blue-m);background:var(--blue);color:var(--blue-t)}
 .spinner{width:36px;height:36px;border:3px solid var(--bd2);border-top-color:var(--blue-m);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .tmpl-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:4px}
@@ -574,6 +586,15 @@ window.DBAPI = {
   <div class="fg2"><div class="fr"><label>Warranty expiry</label><input id="c-warr" type="date"></div><div class="fr"><label>Vendor / Supplier</label><input id="c-vend"></div></div>
   <div class="fg2"><div class="fr"><label>IP address</label><input id="c-ip" placeholder="10.0.x.x"></div><div class="fr"><label>MAC address</label><input id="c-mac" placeholder="AA:BB:CC:DD:EE:FF"></div></div>
   <div class="fr"><label>Notes</label><textarea id="c-notes" rows="2" placeholder="Location, last PM, known quirks..."></textarea></div>
+  <hr>
+  <div class="fr"><label>Photos (device, stickers, cables, peripherals)</label>
+    <div class="photo-upload-area" onclick="document.getElementById('c-photo-input').click()">
+      &#128247; Click to add photo &nbsp;&mdash;&nbsp; or drag and drop<br>
+      <span style="font-size:11px;opacity:.7">JPG, PNG, WEBP &mdash; max 500KB per photo</span>
+    </div>
+    <input type="file" id="c-photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(this)">
+    <div class="photo-grid" id="c-photo-preview"></div>
+  </div>
   <div class="macts"><button class="btn btn-p" onclick="saveComp()">Save component</button><button class="btn" onclick="closeM('m-comp')">Cancel</button></div>
 </div></div>
 
@@ -615,6 +636,13 @@ window.DBAPI = {
   <div class="fg3"><div class="fr"><label>Icon (emoji)</label><input id="nct-icon" placeholder="&#128296;" style="width:70px"></div><div class="fr"><label>Type name *</label><input id="nct-name" placeholder="e.g. Cash recycler"></div><div class="fr"><label>Category</label><select id="nct-cat"><option value="input">Input</option><option value="output">Output</option><option value="compute">Compute</option><option value="payment">Payment</option><option value="cash">Cash handling</option><option value="display">Display</option><option value="network">Network</option><option value="mobile">Mobile</option><option value="other">Other</option></select></div></div>
   <div class="macts"><button class="btn btn-p" onclick="addCtype()">Add type</button><button class="btn" onclick="closeM('m-ctypes')">Close</button></div>
 </div></div>
+
+<!-- PHOTO LIGHTBOX -->
+<div class="photo-lightbox" id="photo-lightbox" onclick="closeLightbox()">
+  <button onclick="closeLightbox()" style="position:absolute;top:16px;right:20px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;line-height:1">&#10005;</button>
+  <img id="lightbox-img" src="" alt="" style="max-width:92vw;max-height:80vh;border-radius:8px;object-fit:contain">
+  <div id="lightbox-cap" style="color:#fff;font-size:13px;opacity:.8;margin-top:4px"></div>
+</div>
 
 <div class="mov" id="m-users" onclick="ocl(event,'m-users')"><div class="modal modal-lg">
   <h3>&#128101; Authorized users</h3>
@@ -1341,10 +1369,12 @@ function buildFloorCanvas(sz, su, floor, w, h) {
     var el = document.createElement('div');
     el.className = 'terminal ' + stCls(ws) + (selUnit===u._id?' sel':'');
     el.style.cssText = 'left:'+u.x+'px;top:'+u.y+'px;width:'+sz2.w+'px;height:'+sz2.h+'px';
+    var zoneName = '';
+    if (u.zoneId) { var uz=Z().find(function(z){return z._id===u.zoneId;}); if(uz) zoneName=uz.lbl; }
     el.innerHTML =
       '<div style="font-size:12px;pointer-events:none">'+uIcon(u.type)+'</div>'+
       '<div class="t-lbl" style="pointer-events:none">'+u.uid+'</div>'+
-      '<div style="font-size:7px;opacity:.6;pointer-events:none">'+(uc.length?uc.length+' parts':'')+'</div>';
+      '<div style="font-size:7px;opacity:.6;pointer-events:none;max-width:54px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(uc.length?uc.length+' parts':(zoneName?zoneName:''))+'</div>';
     el.onclick = function(e) {
       if (!placeMode) { e.stopPropagation(); selUnit=u._id; renderFloor(); renderDetail(); }
     };
@@ -1380,8 +1410,30 @@ async function endDrag() {
   if (!dragData) return;
   var nx = parseInt(dragData.el.style.left), ny = parseInt(dragData.el.style.top);
   setSyncBadge(false);
-  if (dragData.type==='unit') { var u=U().find(function(x){return x._id===dragData.id;}); if(u) await window.DBAPI.saveUnit(Object.assign({},u,{x:nx,y:ny})); }
-  if (dragData.type==='zone') { var z=Z().find(function(x){return x._id===dragData.id;}); if(z) await window.DBAPI.saveZone(Object.assign({},z,{x:nx,y:ny})); }
+
+  if (dragData.type==='unit') {
+    var u = U().find(function(x){return x._id===dragData.id;});
+    if (u) {
+      var assignedZone = null;
+      Z().filter(function(z){return z.sid===curStore&&(z.floor||0)===(u.floor||0);}).forEach(function(z){
+        if (nx>=z.x && nx<=z.x+z.w && ny>=z.y && ny<=z.y+z.h) assignedZone=z._id;
+      });
+      await window.DBAPI.saveUnit(Object.assign({},u,{x:nx,y:ny,zoneId:assignedZone||null}));
+    }
+  }
+
+  if (dragData.type==='zone') {
+    var z = Z().find(function(x){return x._id===dragData.id;});
+    if (z) {
+      var dx = nx - z.x, dy = ny - z.y;
+      await window.DBAPI.saveZone(Object.assign({},z,{x:nx,y:ny}));
+      var zoneUnits = U().filter(function(u){return u.zoneId===z._id;});
+      for (var i=0;i<zoneUnits.length;i++) {
+        var zu = zoneUnits[i];
+        await window.DBAPI.saveUnit(Object.assign({},zu,{x:zu.x+dx,y:zu.y+dy}));
+      }
+    }
+  }
   dragData = null; document.onmousemove = null; document.onmouseup = null;
 }
 var resizeData = null;
@@ -1454,7 +1506,10 @@ function renderDetail() {
   out += '<div class="det-hdr">';
   out += '<div><div class="det-title">'+uIcon(u.type)+' '+u.uid;
   out += ' <span style="font-size:12px;font-weight:400;color:var(--tx2)">'+u.type+(u.loc?' &nbsp;&middot;&nbsp; '+u.loc:'')+'</span></div>';
-  out += '<div style="font-size:12px;color:var(--tx2);margin-top:3px">'+uc.length+' components &nbsp;&middot;&nbsp; '+oi.length+' open issue'+(oi.length!==1?'s':'')+' &nbsp;&middot;&nbsp; '+uml.length+' log entr'+(uml.length!==1?'ies':'y')+'</div></div>';
+  var uZone = u.zoneId ? Z().find(function(z){return z._id===u.zoneId;}) : null;
+  out += '<div style="font-size:12px;color:var(--tx2);margin-top:3px">';
+  if (uZone) out += '<span style="background:var(--blue);color:var(--blue-t);padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;margin-right:6px">&#128205; '+uZone.lbl+'</span>';
+  out += uc.length+' components &nbsp;&middot;&nbsp; '+oi.length+' open issue'+(oi.length!==1?'s':'')+' &nbsp;&middot;&nbsp; '+uml.length+' log entr'+(uml.length!==1?'ies':'y')+'</div></div>';
   out += '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">';
   out += '<span class="badge '+bCls(ws)+'">'+stLabel(ws)+'</span>';
   out += '<button class="btn btn-sm btn-p" onclick="openCompModal(\''+u._id+'\',null)">+ Component</button>';
@@ -1515,7 +1570,19 @@ function renderDetail() {
         out += '<button class="btn btn-sm btn-ic" onclick="openCompModal(null,\''+c._id+'\')" title="Edit">&#9998;</button>';
         out += '<button class="btn btn-sm btn-ic btn-v" onclick="openMaintModal(\''+u._id+'\',\''+c.ctid+'\',null)" title="Log maintenance">&#128203;</button>';
         out += '<button class="btn btn-sm btn-ic btn-d" onclick="deleteComp(\''+c._id+'\')" title="Remove">&#128465;</button>';
+        out += '<button class="btn btn-sm" onclick="openCompModal(null,\''+c._id+'\')" title="Add photo" style="font-size:11px">&#128247;</button>';
         out += '</div></div>';
+        if (c.photos && c.photos.length) {
+          out += '<div class="photo-grid" style="margin:-2px 0 8px 32px">';
+          c.photos.forEach(function(ph,pi){
+            out += '<div class="photo-thumb" onclick="openLightboxComp('+pi+',\''+c._id+'\')">'
+              + '<img src="'+ph.data+'" alt="'+(ph.caption||'')+'">'
+              + (ph.caption?'<div class="photo-cap">'+ph.caption+'</div>':'')
+              + '<button class="photo-del" onclick="deleteCompPhoto(event,\''+c._id+'\','+pi+')" title="Remove">&#10005;</button>'
+              + '</div>';
+          });
+          out += '</div>';
+        }
       });
     });
   }
@@ -1648,6 +1715,7 @@ function pickCT(id) {
 }
 function openCompModal(unitId, compId) {
   _ecid=compId; _addCUid=unitId; _selCTid=null;
+  _pendingPhotos = [];
   document.getElementById('m-comp-h').textContent = compId ? 'Edit component' : 'Add component';
   var c = compId ? C().find(function(x){return x._id===compId;}) : null;
   ['lbl','make','model','sn','tag','fw','vend','ip','mac','notes'].forEach(function(f){ document.getElementById('c-'+f).value = c?(c[f]||''):''; });
@@ -1655,7 +1723,11 @@ function openCompModal(unitId, compId) {
   document.getElementById('c-inst').value = c ? c.inst : '';
   document.getElementById('c-warr').value = c ? c.warr : '';
   document.getElementById('c-ct-name').value=''; document.getElementById('c-ct-icon').value='';
-  if (c) _selCTid = c.ctid;
+  if (c) {
+    _selCTid = c.ctid;
+    _pendingPhotos = (c.photos||[]).slice();
+  }
+  renderPhotoPreview('c-photo-preview', _pendingPhotos, true);
   buildCTP(); openM('m-comp');
 }
 async function saveComp() {
@@ -1671,10 +1743,101 @@ async function saveComp() {
   var id  = _ecid || genId();
   var data = {_id:id,uid:uid,ctid:ctid,lbl:lbl,st:gv('c-st'),make:gv('c-make'),model:gv('c-model'),
     sn:gv('c-sn'),tag:gv('c-tag'),fw:gv('c-fw'),inst:gv('c-inst'),warr:gv('c-warr'),
-    vend:gv('c-vend'),ip:gv('c-ip'),mac:gv('c-mac'),notes:gv('c-notes')};
+    vend:gv('c-vend'),ip:gv('c-ip'),mac:gv('c-mac'),notes:gv('c-notes'),
+    photos:_pendingPhotos};
   setSyncBadge(false);
   await window.DBAPI.saveComp(data); closeM('m-comp');
 }
+
+// ── Photo management ──────────────────────────────────────────────────────────
+var _pendingPhotos = [];
+
+function handlePhotoUpload(input) {
+  var files = Array.from(input.files);
+  files.forEach(function(file) {
+    if (file.size > 600000) { alert(file.name + ' is too large. Max 500KB per photo.'); return; }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var photo = { data: e.target.result, caption: file.name.replace(/\.[^.]+$/,''), ts: Date.now() };
+      _pendingPhotos.push(photo);
+      renderPhotoPreview('c-photo-preview', _pendingPhotos, true);
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderPhotoPreview(containerId, photos, editable) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  if (!photos || !photos.length) { el.innerHTML = ''; return; }
+  el.innerHTML = photos.map(function(ph, i) {
+    return '<div class="photo-thumb" onclick="openLightbox(\'' + i + '\',\'' + containerId + '\')">'
+      + '<img src="' + ph.data + '" alt="' + (ph.caption||'') + '">'
+      + (ph.caption ? '<div class="photo-cap">' + ph.caption + '</div>' : '')
+      + (editable ? '<button class="photo-del" onclick="deletePhotoPreview(event,' + i + ',\'' + containerId + '\')" title="Remove">&#10005;</button>' : '')
+      + '</div>';
+  }).join('');
+}
+
+function deletePhotoPreview(e, idx, containerId) {
+  e.stopPropagation();
+  if (containerId === 'c-photo-preview') {
+    _pendingPhotos.splice(idx, 1);
+    renderPhotoPreview('c-photo-preview', _pendingPhotos, true);
+  }
+}
+
+var _lightboxPhotos = [];
+var _lightboxIdx    = 0;
+function openLightbox(idx, containerId) {
+  var photos = containerId === 'c-photo-preview' ? _pendingPhotos : _lightboxPhotos;
+  if (!photos || !photos.length) return;
+  _lightboxIdx = parseInt(idx);
+  var ph = photos[_lightboxIdx];
+  document.getElementById('lightbox-img').src       = ph.data;
+  document.getElementById('lightbox-cap').textContent = ph.caption || '';
+  document.getElementById('photo-lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('photo-lightbox').classList.remove('open');
+}
+
+function renderCompPhotos(containerId, photos, compId) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  _lightboxPhotos = photos || [];
+  if (!photos || !photos.length) { el.innerHTML = '<div style="font-size:11px;color:var(--tx3)">No photos yet.</div>'; return; }
+  el.innerHTML = photos.map(function(ph, i) {
+    return '<div class="photo-thumb" onclick="openLightboxComp(' + i + ',\'' + compId + '\')">'
+      + '<img src="' + ph.data + '" alt="' + (ph.caption||'') + '">'
+      + (ph.caption ? '<div class="photo-cap">' + ph.caption + '</div>' : '')
+      + '<button class="photo-del" onclick="deleteCompPhoto(event,\'' + compId + '\',' + i + ')" title="Remove">&#10005;</button>'
+      + '</div>';
+  }).join('');
+}
+
+function openLightboxComp(idx, compId) {
+  var c = C().find(function(x){return x._id===compId;});
+  if (!c || !c.photos) return;
+  _lightboxPhotos = c.photos;
+  _lightboxIdx = idx;
+  document.getElementById('lightbox-img').src         = c.photos[idx].data;
+  document.getElementById('lightbox-cap').textContent = c.photos[idx].caption || '';
+  document.getElementById('photo-lightbox').classList.add('open');
+}
+
+async function deleteCompPhoto(e, compId, idx) {
+  e.stopPropagation();
+  if (!confirm('Remove this photo?')) return;
+  var c = C().find(function(x){return x._id===compId;});
+  if (!c) return;
+  var photos = (c.photos||[]).slice();
+  photos.splice(idx, 1);
+  setSyncBadge(false);
+  await window.DBAPI.saveComp(Object.assign({}, c, {photos:photos}));
+}
+
 async function deleteComp(id) {
   if (!confirm('Remove this component?')) return;
   setSyncBadge(false); await window.DBAPI.delComp(id);
