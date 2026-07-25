@@ -328,7 +328,7 @@ function attachListeners(){
       } else if(window.DB.ready){
         window.onDBChange(key);
       }
-    }, err=>);
+    }, err=>{ /* listener error */ });
   });
 }
 
