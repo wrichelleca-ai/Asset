@@ -201,6 +201,132 @@ hr{border:none;border-top:1px solid var(--bd);margin:10px 0}
 .dept-fields .num-field{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}
 .dept-fields label{font-size:11px;color:var(--tx2);text-transform:none;letter-spacing:0;margin:0}
 .dept-fields input{width:52px;padding:3px 5px;font-size:12px;text-align:center}
+
+/* ══ MOBILE RESPONSIVE ══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Topbar: stack store selector below brand row */
+  .topbar {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    gap: 7px;
+  }
+  .topbar .brand { font-size: 13px; }
+  .topbar #store-sel { width: 100%; order: 10; font-size: 12px; }
+  .topbar #user-topbar { margin-left: auto; }
+  .topbar button.btn { font-size: 11px; padding: 5px 9px; }
+
+  /* Hide sidebar completely on mobile - use bottom nav instead */
+  .sidebar { display: none; }
+
+  /* Main takes full width */
+  .main { flex-direction: column; height: auto; }
+  .content { padding: 10px; gap: 10px; overflow-y: visible; }
+
+  /* Bottom navigation bar for mobile */
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg);
+    border-top: 1px solid var(--bd);
+    z-index: 100;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 7px 10px;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--tx3);
+    cursor: pointer;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 52px;
+    border: none;
+    background: none;
+    font-family: var(--font);
+  }
+  .mobile-nav-item .mn-icon { font-size: 18px; line-height: 1; }
+  .mobile-nav-item.active { color: var(--blue-t); }
+  .mobile-nav-item.active .mn-icon { opacity: 1; }
+
+  /* Add padding at bottom so content isn't hidden behind nav */
+  .content { padding-bottom: 70px; }
+
+  /* Stats: 2 columns on mobile */
+  .stats-row { grid-template-columns: 1fr 1fr; }
+
+  /* Cards */
+  .card { padding: 12px; border-radius: var(--r); }
+  .chdr { flex-direction: column; align-items: flex-start; gap: 8px; }
+
+  /* Floor plan - horizontal scroll */
+  .floor-wrap { padding: 6px; }
+  .fc-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Detail panel action buttons - 2x2 grid on mobile */
+  .det-action-grid { grid-template-columns: 1fr 1fr !important; }
+
+  /* Tables - horizontal scroll */
+  .tbl-wrap { font-size: 11px; }
+  .tbl td, .tbl th { padding: 5px 7px; }
+
+  /* Modals - full screen on mobile */
+  .modal, .modal-lg, .modal-xl, .modal-xxl {
+    width: 100% !important;
+    max-width: 100vw;
+    max-height: 96vh;
+    border-radius: var(--rl) var(--rl) 0 0;
+    margin: auto 0 0 0;
+    padding: 16px 14px;
+  }
+  .mov { align-items: flex-end; }
+
+  /* Form grids collapse to single column */
+  .fg2, .fg3, .fg4 { grid-template-columns: 1fr; }
+
+  /* Component type picker - 3 cols on mobile */
+  .ctp-grid { grid-template-columns: repeat(3, 1fr); }
+
+  /* Store type grid */
+  .tmpl-type-grid { grid-template-columns: 1fr; gap: 8px; }
+
+  /* Department grid */
+  .dept-grid { grid-template-columns: 1fr; }
+
+  /* Analytics grid */
+  .agrid { grid-template-columns: 1fr; }
+
+  /* Photo grid - 3 cols on mobile */
+  .photo-grid { grid-template-columns: repeat(3, 1fr); }
+
+  /* Badges and buttons */
+  .stbtns { gap: 4px; }
+  .stbtn { padding: 4px 8px; font-size: 10px; }
+
+  /* Banner */
+  .banner { font-size: 11px; }
+
+  /* User topbar - compact */
+  #user-topbar span:not(.badge) { display: none; }
+  #user-topbar img, #user-topbar div[style*="border-radius:50%"] { display: flex; }
+
+  /* Wizard steps - scrollable */
+  .wizard-steps { overflow-x: auto; }
+  .wstep { font-size: 11px; padding: 6px 10px; }
+}
+
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 7px; }
+  .stat-n { font-size: 20px; }
+  .stat-l { font-size: 10px; }
+  .mobile-nav-item { min-width: 44px; padding: 7px 6px; font-size: 8px; }
+}
 </style></head>
 <body>
 <script type="module">
@@ -519,6 +645,32 @@ window.DBAPI = {
     <div id="stores-list"></div>
   </div></div>
 </div></div></div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav" id="mobile-nav" style="display:none">
+  <button class="mobile-nav-item active" id="mn-floor" onclick="goView('floor',document.getElementById('nav-floor'));mobileNavActivate('mn-floor')">
+    <span class="mn-icon">&#128506;</span>Floor
+  </button>
+  <button class="mobile-nav-item" id="mn-units" onclick="goView('units',document.getElementById('nav-units'));mobileNavActivate('mn-units')">
+    <span class="mn-icon">&#128421;</span>Units
+  </button>
+  <button class="mobile-nav-item" id="mn-components" onclick="goView('components',document.getElementById('nav-components'));mobileNavActivate('mn-components')">
+    <span class="mn-icon">&#128297;</span>Parts
+  </button>
+  <button class="mobile-nav-item" id="mn-issues" onclick="goView('issues',document.getElementById('nav-issues'));mobileNavActivate('mn-issues')">
+    <span class="mn-icon">&#9888;</span>Issues
+  </button>
+  <button class="mobile-nav-item" id="mn-history" onclick="goView('history',document.getElementById('nav-history'));mobileNavActivate('mn-history')">
+    <span class="mn-icon">&#128203;</span>Log
+  </button>
+  <button class="mobile-nav-item" id="mn-analytics" onclick="goView('analytics',document.getElementById('nav-analytics'));mobileNavActivate('mn-analytics')">
+    <span class="mn-icon">&#128202;</span>Stats
+  </button>
+  <button class="mobile-nav-item" id="mn-stores" onclick="goView('stores',document.getElementById('nav-stores'));mobileNavActivate('mn-stores')">
+    <span class="mn-icon">&#128205;</span>Stores
+  </button>
+</nav>
+
 
 <div class="mov" id="m-wizard" onclick="ocl(event,'m-wizard')"><div class="modal modal-xxl" style="gap:8px">
   <h3 id="wiz-title">Add store</h3>
@@ -1519,7 +1671,7 @@ function renderDetail() {
   out += '<button class="btn btn-sm btn-ic btn-d" onclick="deleteUnit(\''+u._id+'\')">&#128465;</button>';
   out += '</div></div>';
 
-  out += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">';
+  out += '<div class="det-action-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">';
   out += '<button class="btn btn-p btn-full" style="padding:12px 8px;flex-direction:column;gap:4px" onclick="openUnitModal(\''+u._id+'\')">';
   out += '<span style="font-size:20px">&#9998;</span><span style="font-size:11px">Edit unit</span></button>';
   out += '<button class="btn btn-v btn-full" style="padding:12px 8px;flex-direction:column;gap:4px" onclick="openCompModal(\''+u._id+'\',null)">';
@@ -2091,6 +2243,77 @@ function renderAnalytics() {
   out+='</div>';
   document.getElementById('analytics-body').innerHTML=out;
 }
+
+// ── Mobile helpers ────────────────────────────────────────────────────────────
+function isMobile() { return window.innerWidth <= 768; }
+
+function mobileNavActivate(id) {
+  document.querySelectorAll('.mobile-nav-item').forEach(function(b){b.classList.remove('active');});
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function setupMobileNav() {
+  var nav = document.getElementById('mobile-nav');
+  if (!nav) return;
+  if (isMobile()) {
+    nav.style.display = 'flex';
+  } else {
+    nav.style.display = 'none';
+  }
+}
+
+// Show/hide mobile nav on resize
+window.addEventListener('resize', function() {
+  setupMobileNav();
+});
+
+// Patch onDBReady to also setup mobile nav
+var _mobileOrigReady = window.onDBReady;
+window.onDBReady = function() {
+  if (_mobileOrigReady) _mobileOrigReady();
+  setupMobileNav();
+};
+
+// Compact topbar on mobile - hide add store button text
+function adaptTopbar() {
+  if (!isMobile()) return;
+  var addBtn = document.querySelector('.topbar button.btn-p');
+  if (addBtn) addBtn.textContent = '+ Store';
+}
+
+// Touch-friendly floor plan: pinch zoom support
+(function() {
+  var lastDist = 0;
+  var scale    = 1;
+  document.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+      lastDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  }, {passive:true});
+  document.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 2) {
+      var dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (lastDist > 0) {
+        scale = Math.max(0.5, Math.min(3, scale * (dist / lastDist)));
+        var fc = document.getElementById('fc-container');
+        if (fc) fc.style.transform = 'scale(' + scale + ')';
+        fc.style.transformOrigin = 'top left';
+      }
+      lastDist = dist;
+    }
+  }, {passive:true});
+  document.addEventListener('touchend', function(e) {
+    if (e.touches.length < 2) lastDist = 0;
+  }, {passive:true});
+})();
+
 </script>
 </body>
 </html>
